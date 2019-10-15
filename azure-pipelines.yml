@@ -20,10 +20,8 @@ jobs:
 
 - job: RunTests
   displayName: 'Run each test'
-  variables:
-    testId: $[ dependencies.FindTests.outputs['finder.TestId'] ]
   strategy:
-    matrix:
+    matrix: $[ dependencies.FindTests.outputs['finder.TestId'] ]
     maxParallel: 2
 
   steps:
