@@ -4,17 +4,31 @@ pool:
   name: 'umtest'
 
 variables:
-- progDir: '"C:\Program Files (x86)\Infuse Consulting\useMango\App\"'
+  progDir: 'C:\Program Files (x86)\Infuse Consulting\useMango\App'
 
 jobs:
+
 - job: FindTests
   displayName: 'Search for the tests to run'
+
   steps:
-  - powershell:
-    '$(progDir)FindTests.exe -s $(Server) -p $(Project) -u $(FindStatus)'
+  - script: echo $(Server)
+  - script: echo $(Project)
+  - powershell: |
+    $testIds = & "$env:progDir\FindTests.exe" -s $env:Server -p $env:Project -u $env:FindStatus -f id
+    $CSVTests = $testIds -join ','
+    echo "##vso[task.setvariable variable=TestId;isOutput=true]$CSVTests"
+    name: finder
+  - script: echo $(TestId)
 
 - job: RunTests
   displayName: 'Run each test'
+  variables:
+    testId: $[ dependencies.FindTests.outputs['finder.TestId'] ]
+  strategy:
+    matrix:
+    maxParallel: 2
+
   steps:
   - script: '"C:\Program Files (x86)\Infuse Consulting\useMango\App\MangoMotor.exe" -s $(Server) -p $(Project) -i $(TestId)'
   - task: PublishTestResults@2
@@ -24,4 +38,4 @@ jobs:
       searchFolder: '$(appdata)/useMango/Logs/'
       mergeTestResults: true
       condition: succeededOrFailed()
-      
+ 
