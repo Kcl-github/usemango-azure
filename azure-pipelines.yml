@@ -17,7 +17,7 @@ jobs:
 
 
 - job: RunTests
-  displayName: 'Run each test'
+  displayName: 'Run'
   dependsOn: FindTests
   strategy:
     matrix: $[ dependencies.FindTests.outputs['finder.TestId'] ]
