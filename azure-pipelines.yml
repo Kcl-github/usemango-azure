@@ -1,0 +1,27 @@
+# https://aka.ms/yaml
+
+pool:
+  name: 'umtest'
+
+variables:
+- progDir: '"C:\Program Files (x86)\Infuse Consulting\useMango\App\"'
+
+jobs:
+- job: FindTests
+  displayName: 'Search for the tests to run'
+  steps:
+  - powershell:
+    '$(progDir)FindTests.exe -s $(Server) -p $(Project) -u $(FindStatus)'
+
+- job: RunTests
+  displayName: 'Run each test'
+  steps:
+  - script: '"C:\Program Files (x86)\Infuse Consulting\useMango\App\MangoMotor.exe" -s $(Server) -p $(Project) -i $(TestId)'
+  - task: PublishTestResults@2
+    displayName: 'Publish basic test result (JUnit)'
+    inputs:
+      testResultsFiles: junit.xml
+      searchFolder: '$(appdata)/useMango/Logs/'
+      mergeTestResults: true
+      condition: succeededOrFailed()
+      
