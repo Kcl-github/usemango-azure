@@ -18,6 +18,7 @@ jobs:
 
 - job: RunTests
   displayName: 'Run each test'
+  dependsOn: FindTests
   strategy:
     matrix: $[ dependencies.FindTests.outputs['finder.TestId'] ]
     maxParallel: 2
