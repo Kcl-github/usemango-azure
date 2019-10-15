@@ -12,10 +12,8 @@ jobs:
   displayName: 'Search for the tests to run'
 
   steps:
-  - powershell:
+  - powershell: .\findtests.ps1
     name: finder
-    targetType: filePath
-    filePath: findtests.ps1
 
 
 - job: RunTests
