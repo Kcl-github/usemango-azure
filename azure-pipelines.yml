@@ -12,11 +12,11 @@ jobs:
   displayName: 'Search for the tests to run'
 
   steps:
-  - script: echo $(Server)
-  - script: echo $(Project)
-  - powershell: $testIds = & "$env:progDir\FindTests.exe" -s $env:Server -p $env:Project -u $env:FindStatus -f id;$CSVTests = $testIds -join ',';echo "##vso[task.setvariable variable=TestId;isOutput=true]$CSVTests"
+  - powershell:
     name: finder
-  - script: echo $(TestId)
+    targetType: filePath
+    filePath: findtests.ps1
+
 
 - job: RunTests
   displayName: 'Run each test'
