@@ -1,0 +1,82 @@
+# https://aka.ms/yaml
+
+pool:
+  name: 'Azure Pipelines'
+
+variables:
+  baseUrl: 'https://tests.api.usemango.co.uk/v1'  # Replace with your actual base URL
+  useMangoApiKey: 'your-secret-key-here'  # Replace with your actual API key
+
+jobs:
+- job: FindTests
+  displayName: 'Search for the tests to run'
+
+  steps:
+  - checkout: self
+
+  - powershell: |
+      # Define the base URL and API key
+      $baseUrl = "$(baseUrl)"
+      $useMangoApiKey = "$(useMangoApiKey)"
+
+      # Initialize variables
+      $cursor = $null
+      $tests = @()
+
+      Write-Output "Retrieving tests from project $($env:Project) with tags $($env:Tags) and status $($env:Status)"
+
+      while ($true) {
+          # Construct the URL for the test index
+          $url = "$baseUrl/projects/$($env:Project)/testindex?tags=$($env:Tags)&status=$($env:Status)&cursor=$cursor"
+
+          try {
+              # Make the HTTP GET request
+              $response = Invoke-RestMethod -Uri $url -Headers @{ Authorization = "APIKEY $useMangoApiKey" } -Method Get -ErrorAction Stop
+
+              # Process the response
+              foreach ($test in $response.Items) {
+                  # Add test information to the tests array
+                  $testInfo = @{
+                      'Id' = $test.Id
+                      'Name' = $test.Name
+                  }
+                  $tests += $testInfo
+              }
+
+              # Check if there are more pages of tests
+              if (!$response.Info.HasNext) {
+                  break
+              }
+
+              # Update the cursor for the next page
+              $cursor = $response.Info.Next
+          } catch {
+              Write-Error "Testindex get request failed. $_"
+              break
+          }
+      }
+
+      # Sort the tests by name
+      $sortedTests = $tests | Sort-Object { $_.Name }
+
+      # Output the retrieved tests
+      $sortedTests | ForEach-Object {
+          Write-Output "Id: $($_.Id), Name: $($_.Name)"
+      }
+
+      # Output the total number of tests
+      Write-Output "Total tests retrieved: $($sortedTests.Count)"
+
+      # Set the output variable to be used by the next job
+      Write-Output "##vso[task.setvariable variable=TestId;isOutput=true]12345"  # Replace 12345 with the actual test ID
+
+      # Output the lists of tests retrieved
+      Write-Output "Tests List:"
+      $sortedTests | ForEach-Object {
+          Write-Output "- Id: $($_.Id), Name: $($_.Name)"
+      }
+
+      # Output a message at the end
+      Write-Output "Test retrieval completed."
+
+    name: finder
