@@ -1,7 +1,7 @@
 # https://aka.ms/yaml
 
 pool:
-  name: 'umtest'
+  name: 'Azure Pipelines'
 
 variables:
   progDir: 'C:\Program Files (x86)\Infuse Consulting\useMango\App'
